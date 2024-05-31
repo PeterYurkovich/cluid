@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/peteryurkovich/cluid/pkg/apply"
 )
 
 const url = "https://charm.sh/"
@@ -17,17 +17,16 @@ type model struct {
 }
 
 func checkServer() tea.Msg {
-	c := &http.Client{Timeout: 10 * time.Second}
-	res, err := c.Get(url)
+
+	err := apply.Apply("templates/hack/openshift/config/deployment")
 	if err != nil {
 		return errMsg{err}
 	}
-	defer res.Body.Close() // nolint:errcheck
 
-	return statusMsg(res.StatusCode)
+	return statusMsg("200")
 }
 
-type statusMsg int
+type statusMsg string
 
 type errMsg struct{ err error }
 
@@ -42,7 +41,7 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case statusMsg:
-		m.status = int(msg)
+		m.status = 200
 		return m, tea.Quit
 
 	case errMsg:
